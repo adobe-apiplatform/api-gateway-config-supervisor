@@ -45,10 +45,25 @@ Dependencies
 Developer guide
 ===============
 
-Make sure you have go 1.5.1+ installed.
+Make sure you have go 1.5.1+ installed. On a Mac you can execute
+```
+brew install go
+```
 
 The go dependencies have been already added using `godeps` in the existing GitRepo in order to achieve repeatable builds and isolated envs.
+To build the project you can run:
 
 ```
 make install
 ```
+
+#### Building a Docker image
+
+Make sure you install docker first, opening a Docker terminal, then issue:
+
+```
+make docker
+```
+
+The `Dockerfile` is building a minimalistic Docker image installing go and its dependencies only to build the project, uninstalling them afterwards,
+and only keeping statically built binaries.
