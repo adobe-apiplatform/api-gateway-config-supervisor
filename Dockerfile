@@ -6,19 +6,36 @@
 #
 FROM alpine:latest
 
-RUN apk update \
-    && apk add curl python
+ENV GOPATH /usr/lib/go/bin
+ENV GOBIN  /usr/lib/go/bin
+ENV PATH   $PATH:/usr/lib/go/bin
 
-ENV GOLANG_VERSION 1.5.1
-ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz
-ENV GOLANG_DOWNLOAD_SHA1 0df564746d105f4180c2b576a1553ebca9d9a124
 
-RUN mkdir -p /tmp/api-gateway/
+RUN mkdir -p /tmp/go
+ADD . /tmp/go
+RUN echo "http://dl-4.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories \
+    && apk update \
+    && apk add make git go \
 
-RUN echo "Installing Go ..." \
-    && mkdir -p /tmp/api-gateway/ \
-    && curl -L "$GOLANG_DOWNLOAD_URL" -o /tmp/api-gateway/golang.tar.gz \
-    && echo "$GOLANG_DOWNLOAD_SHA1  /tmp/api-gateway/golang.tar.gz" | sha1sum -c - \
-    && mkdir -p /usr/local/src \
-    && tar -C /usr/local -xzf /tmp/api-gateway/golang.tar.gz \
-    && rm /tmp/api-gateway/golang.tar.gz
+    && echo " building local project ... " \
+    && cd /tmp/go \
+    && make setup \
+    && mkdir -p /tmp/go/Godeps/_workspace \
+    && ln -s /tmp/go/vendor /tmp/go/Godeps/_workspace/src \
+    && mkdir -p /tmp/go-src/src/github.com/adobe-apiplatform \
+    && ln -s /tmp/go /tmp/go-src/src/github.com/adobe-apiplatform/api-gateway-config-supervisor \
+    && GOPATH=/tmp/go/vendor:/tmp/go-src CGO_ENABLED=0 GOOS=linux /usr/lib/go/bin/godep  go build -ldflags "-s" -a -installsuffix cgo -o api-gateway-config-supervisor ./ \
+    && cp /tmp/go/api-gateway-config-supervisor /usr/lib/go/bin \
+
+    && echo "installing rclone sync ... " \
+    && go get github.com/ncw/rclone \
+
+    && echo " cleaning up ... " \
+    && rm -rf /usr/lib/go/bin/src \
+    && rm -rf /tmp/go \
+    && rm -rf /tmp/go-src \
+    && rm -rf /usr/lib/go/bin/pkg/ \
+    && rm -rf /usr/lib/go/bin/godep \
+    && apk del make git go \
+    && rm -rf /var/cache/apk/*
+
