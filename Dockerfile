@@ -39,3 +39,11 @@ RUN echo "http://dl-4.alpinelinux.org/alpine/edge/community" >> /etc/apk/reposit
     && apk del make git go \
     && rm -rf /var/cache/apk/*
 
+RUN echo " installing aws-cli ..." \
+    && apk update \
+    && apk add python \
+    && apk add py-pip \
+    && pip install --upgrade pip \
+    && pip install awscli
+
+ENTRYPOINT ["api-gateway-config-supervisor"]

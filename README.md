@@ -28,11 +28,27 @@ api-gateway-config-supervisor \
 ```
 
 `sync-cmd` is executed each `sync-interval`. If there are changes to the files in `sync-folder` `reload-cmd` is executed.
+`sync-folder` needs to exist before executing the command otherwise it exits with an error.
 A web server is also started at `http-addr`; the gateway should check `http://<http-addr>/health-check` as part of its own regular `health-check`
 so that in the unlikely event that this process dies the gateway appears unhealthy too.
 
 In the initial design `rclone` was embedded into the program but b/c it wasn't straight forward to integrate it `sync-cmd` is used instead.
 Using an external command for syncing is not that bad actually as it allows other cloud specific tools to come into play ( i.e `aws cli` )
+
+### Using AWS-CLI
+After installing `aws cli` the only change required to use this tool is to edit `sync-cmd` to something like:
+```
+--sync-cmd="aws s3 sync s3://api-gateway-config /etc/api-gateway"
+```
+
+```
+api-gateway-config-supervisor \
+        --reload-cmd="api-gateway -s reload" \
+        --sync-folder=/etc/api-gateway \
+        --sync-interval=10s \
+        --sync-cmd="aws s3 sync s3://api-gateway-config /etc/api-gateway" \
+        --http-addr=127.0.0.1:8888
+```
 
 Dependencies
 ============
@@ -45,7 +61,7 @@ Dependencies
 Developer guide
 ===============
 
-Make sure you have go 1.5.1+ installed. On a Mac you can execute
+Make sure you have go 1.5.1+ installed. On a Mac you can execute:
 ```
 brew install go
 ```
@@ -57,7 +73,7 @@ To build the project you can run:
 make install
 ```
 
-#### Building a Docker image
+### Building a Docker image
 
 Make sure you install docker first, opening a Docker terminal, then issue:
 
@@ -66,4 +82,14 @@ make docker
 ```
 
 The `Dockerfile` is building a minimalistic Docker image installing go and its dependencies only to build the project, uninstalling them afterwards,
-and only keeping statically built binaries.
+and only keeping statically built binaries. In addition it adds `rclone` ( +~14MB ) and `awscli` ( +~70MB ) for convenience but `awscli` is to be removed once `rclone` supports IAM Roles.
+
+The container's entrypoint is `api-gateway-config-supervisor` so that its usage looks similar to the command without docker. For example:
+```
+docker run adobeapiplatform/api-gateway-config-supervisor:latest \
+        --reload-cmd="api-gateway -s reload" \
+        --sync-folder=/etc/api-gateway \
+        --sync-interval=10s \
+        --sync-cmd="aws s3 sync s3://api-gateway-config /etc/api-gateway" \
+        --http-addr=127.0.0.1:8888
+```
