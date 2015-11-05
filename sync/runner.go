@@ -52,8 +52,7 @@ func executeCmd(cmd string, wg *sync.WaitGroup) {
 	err = cmdRunner.Wait()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error waiting for Cmd", err)
-		// TODO: exit after a number of retries only
-		os.Exit(1)
+		//os.Exit(1) // we continue b/c maybe at the next sync the issue is fixed
 	}
 
 	log.Println("done")
