@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"time"
-	//    "net/http"
+
 	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
 	"github.com/adobe-apiplatform/api-gateway-config-supervisor/ws"
 	_ "net/http/pprof"
@@ -36,8 +36,7 @@ var (
 )
 
 func syntaxError() {
-	fmt.Fprintf(os.Stderr, `Execute a sync command and watch a folder for changes.
-`)
+	fmt.Fprintf(os.Stderr, `Execute a sync command and watch a folder for changes.`)
 }
 
 // ParseFlags parses the command line flags

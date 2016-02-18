@@ -11,6 +11,9 @@ install:
 #	GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install -v ./...
 	GOPATH=$(GOPATH) GOBIN=$(GOBIN) $(GOPATH)/bin/godep go install -v ./...
 
+test:
+	go test
+
 format:
 	gofmt -e -w ./
 

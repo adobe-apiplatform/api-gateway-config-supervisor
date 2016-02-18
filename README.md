@@ -11,7 +11,7 @@ Table of Contents
 
 Status
 ======
-This module is experimental at the moment.
+This module is considered production ready. 
 
 Quick Start
 ============
@@ -71,6 +71,12 @@ To build the project you can run:
 
 ```
 make install
+```
+
+To run the unit tests run:
+
+```
+make test
 ```
 
 ### Building a Docker image
