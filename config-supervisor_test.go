@@ -14,6 +14,20 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func setup(t *testing.T) (tempdir string) {
+	tmpDir, err := ioutil.TempDir("", "api-gateway-config-supervisor-")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// setup a syncFolder to watch by the main program
+	syncFolder = &tmpDir
+	// setup a sync interval for the test
+	var sync_interval = time.Duration(time.Second * 1)
+	syncInterval = &sync_interval
+	return tmpDir
+}
+
 func createFile(t *testing.T, tmpDir string, file_content string) (f *os.File, err error) {
 	content := []byte(file_content)
 	tmpfile, err := ioutil.TempFile(tmpDir, "new-file-")
@@ -31,15 +45,8 @@ func createFile(t *testing.T, tmpDir string, file_content string) (f *os.File, e
 }
 
 func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "api-gateway-config-supervisor-")
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpDir := setup(t)
 	defer os.RemoveAll(tmpDir)
-
-	syncFolder = &tmpDir
-	var sync_interval = time.Duration(time.Second * 1)
-	syncInterval = &sync_interval
 
 	// start the utility in background
 	go main()
@@ -49,6 +56,9 @@ func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
 
 	//modifyFS: create a new file
 	f1, err := createFile(t, tmpDir, "new-file-content")
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer os.Remove(f1.Name()) // clean up
 
 	// use a reload command to change the content of the new file added
@@ -65,6 +75,31 @@ func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
 		t.Fatal("reload cmd did not run correctly. File content was:" + string(c))
 	}
 
-	// wait for some time to check the changes
+	//reset the reload command
+	reload_cmd = "echo reload-cmd not defined"
+	reloadCmd = &reload_cmd
+}
+
+func TestThatSyncCommandExecutes(t *testing.T) {
+	tmpDir := setup(t)
+	defer os.RemoveAll(tmpDir)
+
+	// in order to test that the sync command executed we create a file to later verify that it exists on the disk
+	sync_cmd_test := "touch " + tmpDir + "/sync_cmd.txt"
+	syncCmd = &sync_cmd_test
+
+	// wait for some time to init
 	time.Sleep(500 * time.Millisecond)
+
+	// main is already started by the previous test
+	// and we can't start it here again due to: https://github.com/golang/go/issues/4674
+	//go main()
+
+	// wait for some time to init
+	time.Sleep(500 * time.Millisecond)
+
+	// check that the sync_cmd.txt file exists
+	if _, err := os.Stat(tmpDir + "/sync_cmd.txt"); err != nil {
+		t.Fatal("Expected to find the file created by the sync command " + tmpDir + "/sync_cmd.txt")
+	}
 }

@@ -103,6 +103,23 @@ func watchForFSChanges() {
 	}
 }
 
+func startWebServer() {
+	go ws.RunWS(*httpAddr)
+}
+
+func startWatchingFS() {
+	go watchForFSChanges()
+	scheduler.Every(int(syncInterval.Seconds())).Seconds().Run(executeSyncCmd)
+	scheduler.Every(int(syncInterval.Seconds())).Seconds().Run(checkForReload)
+}
+
+func waitToTerminate() {
+	// Waiting for terminating (i use a sighandler like in vitess)
+	terminate := make(chan os.Signal)
+	signal.Notify(terminate, os.Interrupt)
+	<-terminate
+}
+
 func main() {
 	ParseFlags()
 	if *version {
@@ -110,17 +127,9 @@ func main() {
 		os.Exit(0)
 	}
 
-	go ws.RunWS(*httpAddr)
-
-	go watchForFSChanges()
-	scheduler.Every(int(syncInterval.Seconds())).Seconds().Run(executeSyncCmd)
-	scheduler.Every(int(syncInterval.Seconds())).Seconds().Run(checkForReload)
-
-	//    http.ListenAndServe(":8181", nil)
-	// Waiting for terminating (i use a sighandler like in vitess)
-	terminate := make(chan os.Signal)
-	signal.Notify(terminate, os.Interrupt)
-	<-terminate
+	startWebServer()    // expose a /health-check API on the localhost
+	startWatchingFS()	// watch for file system changes
+	waitToTerminate()	// wait until the program terminates
 
 	log.Printf("Stopped ... ")
 }
