@@ -1,11 +1,10 @@
 package ws
 
 import (
+	"encoding/json"
+	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
 	"log"
 	"net/http"
-	"encoding/json"
-//	"time"
-	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
 )
 
 var status = sync.GetStatusInstance()

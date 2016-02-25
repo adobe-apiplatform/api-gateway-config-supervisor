@@ -125,9 +125,9 @@ func main() {
 		os.Exit(0)
 	}
 
-	startWebServer()    // expose a /health-check API on the localhost
-	startWatchingFS()	// watch for file system changes
-	waitToTerminate()	// wait until the program terminates
+	startWebServer()  // expose a /health-check API on the localhost
+	startWatchingFS() // watch for file system changes
+	waitToTerminate() // wait until the program terminates
 
 	log.Printf("Stopped ... ")
 }
