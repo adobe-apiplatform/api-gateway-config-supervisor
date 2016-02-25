@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
 )
 
 func TestMain(m *testing.M) {
@@ -51,6 +52,17 @@ func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
 	// start the utility in background
 	go main()
 
+	status = sync.GetStatusInstance()
+	if (time.Since(status.LastSync).Seconds() < 2) {
+		t.Fatal("sync should not happen immediately" + time.Since(status.LastSync).String())
+	}
+	if (time.Since(status.LastReload).Seconds() > 2) {
+		t.Fatal("LastReload should be current but was " + time.Since(status.LastReload).String())
+	}
+	if (time.Since(status.LastFSChangeDetected).Seconds() > 2) {
+		t.Fatal("LastFSChangeDetected should be current but was " + time.Since(status.LastFSChangeDetected).String())
+	}
+
 	// wait for some time to init
 	time.Sleep(500 * time.Millisecond)
 
@@ -69,7 +81,17 @@ func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
 	// wait for some time to track the changes
 	time.Sleep(1000 * time.Millisecond)
 
-	// check that reload cmd has been applied
+	// check that reload cmd has been executed
+	if (time.Since(status.LastSync).Seconds() > 1) {
+		t.Fatal("sync should have executed earlier than 1.5 but was executed " + time.Since(status.LastSync).String())
+	}
+	if (time.Since(status.LastReload).Seconds() > 1) {
+		t.Fatal("reload should have executed earlier than 1.5s but was executed " + time.Since(status.LastReload).String())
+	}
+	if (time.Since(status.LastFSChangeDetected).Seconds() > 1) {
+		t.Fatal("FS changes should have been detected earlier than 1.5s but was detected " + time.Since(status.LastFSChangeDetected).String())
+	}
+
 	c, err := ioutil.ReadFile(f1.Name())
 	if !strings.HasPrefix(string(c), "reload_cmd-file-content") {
 		t.Fatal("reload cmd did not run correctly. File content was:" + string(c))

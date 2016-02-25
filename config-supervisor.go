@@ -29,10 +29,7 @@ var (
 	syncFolder   = pflag.StringP("sync-folder", "", "~/tmp/api-gateway-config", "The folder to watch for changes.")
 	reloadCmd    = pflag.StringP("reload-cmd", "", "echo reload-cmd not defined", "Command used to reload the gateway")
 	httpAddr     = pflag.StringP("http-addr", "", "127.0.0.1:8888", "Http Address exposing a /health-check for the sync process")
-	// when was the reload cmd executed last time
-	lastReload = time.Now()
-	// when did the last change occur
-	lastChange = time.Now()
+	status       = sync.GetStatusInstance()
 )
 
 func syntaxError() {
@@ -64,17 +61,18 @@ func ParseFlags() {
 
 func executeSyncCmd() {
 	go sync.Execute(*syncCmd)
+	status.LastSync = time.Now()
 }
 
 func executeReloadCmd() {
 	log.Println(ansicolor.Red("Executing Reload Cmd"))
 	go sync.Execute(*reloadCmd)
-	lastReload = time.Now()
+	status.LastReload = time.Now()
 }
 
 func checkForReload() {
-	if time.Since(lastChange) < time.Since(lastReload) && time.Since(lastReload) > *syncInterval {
-		lastReload = time.Now()
+	if time.Since(status.LastFSChangeDetected) < time.Since(status.LastReload) && time.Since(status.LastReload) > *syncInterval {
+		status.LastReload = time.Now()
 		executeReloadCmd()
 	}
 }
@@ -88,12 +86,12 @@ func watchForFSChanges() {
 			if file == "" {
 				continue
 			}
-			lastChange = time.Now()
-			if time.Since(lastReload) > *syncInterval {
-				lastReload = time.Now()
+			status.LastFSChangeDetected = time.Now()
+			if time.Since(status.LastReload) > *syncInterval {
+				status.LastReload = time.Now()
 				go func() {
 					// wait a little in case there are more changes to sync
-					for time.Since(lastChange) < time.Second*1 {
+					for time.Since(status.LastFSChangeDetected) < time.Second*1 {
 						time.Sleep(1 * time.Second)
 					}
 					executeReloadCmd()
