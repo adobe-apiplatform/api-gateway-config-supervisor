@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/adobe-apiplatform/api-gateway-config-supervisor",
+	"GoVersion": "go1.5.1",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/carlescere/scheduler",
+			"Comment": "0.1-13-g025e9f5",
+			"Rev": "025e9f58462112b9fb636708374467aef7161289"
+		},
+		{
+			"ImportPath": "github.com/koyachi/go-term-ansicolor/ansicolor",
+			"Rev": "6f81280f93607303140434290f00ee0a269904ad"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "08b1a584251b5b62f458943640fc8ebd4d50aaa5"
+		},
+		{
+			"ImportPath": "gopkg.in/fsnotify.v1",
+			"Comment": "v1.2.1",
+			"Rev": "7be54206639f256967dd82fa767397ba5f8f48f5"
+		}
+	]
+}
