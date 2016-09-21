@@ -21,8 +21,19 @@ static:
 #	CGO_ENABLED=0 GOOS=linux go build -ldflags "-s" -a -installsuffix cgo -o $(GOBIN)/api-gateway-config-supervisor-static ./
 	CGO_ENABLED=0 go build -ldflags "-s" -a -installsuffix cgo -o $(GOBIN)/api-gateway-config-supervisor-static ./
 
-docker:
-	docker build -t adobeapiplatform/api-gateway-config-supervisor .
+DOCKER_TEMP := $(shell mktemp -u ./.Dockerfile.XXXXXXXXXX)
+.DELETE_ON_ERROR: ${DOCKER_TEMP}
+${DOCKER_TEMP}:
+ifdef DOCKER_BUILD_DEBUG
+	cp Dockerfile ${DOCKER_TEMP}
+else
+	perl -0777 -pe 's/#.*?\n+//g; s/\n+/\n/g; s{(\nRUN )}{++$$count > 1 ? "\\\n&& " : $$1}ge;' <Dockerfile >${DOCKER_TEMP}
+endif
+	docker build -t adobeapiplatform/api-gateway-config-supervisor -f ${DOCKER_TEMP} .
+	rm -f ${DOCKER_TEMP}
+
+.PHONY: docker
+docker: ${DOCKER_TEMP}
 
 .PHONY: docker-ssh
 docker-ssh:
