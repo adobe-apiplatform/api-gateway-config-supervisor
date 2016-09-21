@@ -76,8 +76,8 @@ func (watcher *RecursiveWatcher) Run(debug bool) {
 						if debug {
 							DebugMessage("Detected new directory %s", event.Name)
 						}
-						if !shouldIgnoreFile(filepath.Base(event.Name)) {
-							watcher.AddFolder(event.Name)
+						for _, folder := range Subfolders(event.Name) {
+							watcher.AddFolder(folder)
 						}
 					} else {
 						if debug {
