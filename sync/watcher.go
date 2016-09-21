@@ -15,13 +15,13 @@ func WatchFolderRecursive(folder string, debug bool) <-chan string {
 			log.Fatal(err)
 		}
 		watcher.Run(debug)
-		defer watcher.Close()
+		defer watcher.fsw.Close()
 
 		for {
 			select {
-			case event := <-watcher.Events:
-				done <- event.Name
-				log.Println(ansicolor.IntenseBlack("FS Changed"), ansicolor.Underline(event.Name))
+			case file := <-watcher.Files:
+				done <- file
+				log.Println(ansicolor.IntenseBlack("FS Changed"), ansicolor.Underline(file))
 			case folder := <-watcher.Folders:
 				log.Println(ansicolor.Yellow("Watching path"), ansicolor.Yellow(folder))
 			}

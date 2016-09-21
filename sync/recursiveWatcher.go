@@ -13,7 +13,7 @@ import (
 )
 
 type RecursiveWatcher struct {
-	*fsnotify.Watcher
+	fsw     *fsnotify.Watcher
 	Files   chan string
 	Folders chan string
 }
@@ -37,7 +37,7 @@ func NewRecursiveWatcher(path string) (*RecursiveWatcher, error) {
 	if err != nil {
 		return nil, err
 	}
-	rw := &RecursiveWatcher{Watcher: watcher}
+	rw := &RecursiveWatcher{fsw: watcher}
 
 	rw.Files = make(chan string, 10)
 	rw.Folders = make(chan string, len(folders))
@@ -49,7 +49,7 @@ func NewRecursiveWatcher(path string) (*RecursiveWatcher, error) {
 }
 
 func (watcher *RecursiveWatcher) AddFolder(folder string) {
-	err := watcher.Add(folder)
+	err := watcher.fsw.Add(folder)
 	if err != nil {
 		log.Println("Error watching: ", folder, err)
 	}
@@ -60,7 +60,7 @@ func (watcher *RecursiveWatcher) Run(debug bool) {
 	go func() {
 		for {
 			select {
-			case event := <-watcher.Events:
+			case event := <-watcher.fsw.Events:
 				if debug {
 					log.Println("Event: ", event)
 				}
@@ -95,7 +95,7 @@ func (watcher *RecursiveWatcher) Run(debug bool) {
 					watcher.Files <- event.Name
 				}
 
-			case err := <-watcher.Errors:
+			case err := <-watcher.fsw.Errors:
 				log.Println("error", err)
 			}
 		}
