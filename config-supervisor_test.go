@@ -26,6 +26,9 @@ func setup(t *testing.T) (tempdir string) {
 	// setup a sync interval for the test
 	var sync_interval = time.Duration(time.Second * 1)
 	syncInterval = &sync_interval
+	// setup extra debug information
+	debugOn := true
+	debug = &debugOn
 	return tmpDir
 }
 

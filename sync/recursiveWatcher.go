@@ -61,6 +61,9 @@ func (watcher *RecursiveWatcher) Run(debug bool) {
 		for {
 			select {
 			case event := <-watcher.Events:
+				if debug {
+					log.Println("Event: ", event)
+				}
 				// create a file/directory
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					fi, err := os.Stat(event.Name)

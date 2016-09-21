@@ -15,14 +15,14 @@ type FSWatcher struct {
 
 // Watches the specific folder for changes
 // When a change happens it triggers a notification on a channel
-func WatchFolderRecursive(folder string) <-chan string {
+func WatchFolderRecursive(folder string, debug bool) <-chan string {
 	done := make(chan string)
 	go func() {
 		watcher, err := NewRecursiveWatcher(folder)
 		if err != nil {
 			log.Fatal(err)
 		}
-		watcher.Run(false)
+		watcher.Run(debug)
 		defer watcher.Close()
 
 		for {

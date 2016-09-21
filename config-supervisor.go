@@ -29,6 +29,7 @@ var (
 	syncFolder   = pflag.StringP("sync-folder", "", "~/tmp/api-gateway-config", "The folder to watch for changes.")
 	reloadCmd    = pflag.StringP("reload-cmd", "", "echo reload-cmd not defined", "Command used to reload the gateway")
 	httpAddr     = pflag.StringP("http-addr", "", "127.0.0.1:8888", "Http Address exposing a /health-check for the sync process")
+	debug        = pflag.BoolP("debug", "v", false, "Print extra debug information")
 	status       = sync.GetStatusInstance()
 )
 
@@ -79,7 +80,7 @@ func checkForReload() {
 
 //watches for changes in the syncFolder, execute reloadCmd when there are changes
 func watchForFSChanges() {
-	c := sync.WatchFolderRecursive(*syncFolder)
+	c := sync.WatchFolderRecursive(*syncFolder, *debug)
 	for {
 		select {
 		case file := <-c:
