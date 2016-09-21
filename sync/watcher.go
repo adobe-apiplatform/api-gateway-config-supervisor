@@ -2,16 +2,8 @@ package sync
 
 import (
 	"github.com/koyachi/go-term-ansicolor/ansicolor"
-	"gopkg.in/fsnotify.v1"
 	"log"
 )
-
-type FSWatcher struct {
-	*fsnotify.Watcher
-	Files   chan string
-	Folders chan string
-	Changes <-chan string
-}
 
 // Watches the specific folder for changes
 // When a change happens it triggers a notification on a channel
