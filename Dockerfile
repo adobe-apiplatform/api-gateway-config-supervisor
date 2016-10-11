@@ -18,20 +18,20 @@ RUN echo " installing aws-cli ..." \
     && apk add py-pip \
     && pip install --upgrade pip \
     && pip install awscli \
-    && apk del py-pip
+    && apk del py-pip \
 
-RUN echo " building local project ... " \
+    && echo " building local project ... " \
     && apk add --virtual .build-deps make git gcc libc-dev go \
     && cd ${GOPATH}/src/github.com/adobe-apiplatform/api-gateway-config-supervisor \
     && make setup \
     && godep  go test \
     && godep  go build -ldflags "-s" -a -installsuffix cgo -o api-gateway-config-supervisor ./ \
-    && cp ${GOPATH}/src/github.com/adobe-apiplatform/api-gateway-config-supervisor/api-gateway-config-supervisor ${GOBIN}
+    && cp ${GOPATH}/src/github.com/adobe-apiplatform/api-gateway-config-supervisor/api-gateway-config-supervisor ${GOBIN} \
 
-RUN echo "installing rclone sync ... " \
-    && go get github.com/ncw/rclone
+    && echo "installing rclone sync ... " \
+    && go get github.com/ncw/rclone \
 
-RUN echo " cleaning up ... " \
+    && echo " cleaning up ... " \
     && rm -rf ${GOBIN}/src \
        	      ${GOPATH} \
     	      /tmp/api-gateway-config-supervisor* \
