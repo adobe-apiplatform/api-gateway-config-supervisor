@@ -69,8 +69,12 @@ func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
 	// wait for some time to init
 	time.Sleep(500 * time.Millisecond)
 
-	//modifyFS: create a new file
-	f1, err := createFile(t, tmpDir, "new-file-content")
+	//modifyFS: create a new directory and file
+	dir, err := ioutil.TempDir(tmpDir, "new-dir-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f1, err := createFile(t, dir, "new-file-content")
 	if err != nil {
 		t.Fatal(err)
 	}
