@@ -1,6 +1,7 @@
 GOPATH ?= `pwd`
 GOBIN ?= `pwd`/bin
 GOOS ?= $(`uname -a | awk '{print tolower($1)}'`)
+.PHONY: setup install test format static docker docker-ssh
 
 setup:
 	go get github.com/tools/godep
@@ -24,6 +25,5 @@ static:
 docker:
 	docker build -t adobeapiplatform/api-gateway-config-supervisor .
 
-.PHONY: docker-ssh
 docker-ssh:
 	docker run -ti --entrypoint='/bin/sh' adobeapiplatform/api-gateway-config-supervisor:latest

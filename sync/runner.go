@@ -7,10 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
 )
 
-func executeCmd(cmd string, wg *sync.WaitGroup) {
+func executeCmd(cmd string) {
 	// splitting head => g++ parts => rest of the command
 	parts := strings.Fields(cmd)
 	head := parts[0]
@@ -56,13 +55,9 @@ func executeCmd(cmd string, wg *sync.WaitGroup) {
 	}
 
 	log.Println("done")
-	wg.Done() // Need to signal to waitgroup that this goroutine is done
 }
 
 func Execute(syncCmd string) {
 	log.Println("Executing sync cmd:", syncCmd)
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
-	executeCmd(syncCmd, wg)
-	wg.Wait()
+	executeCmd(syncCmd)
 }
