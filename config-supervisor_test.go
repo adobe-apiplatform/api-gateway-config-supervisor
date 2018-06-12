@@ -197,3 +197,32 @@ func TestThatReloadCommandExecutesWhenNewFolderIsAdded(t *testing.T) {
 	//reset the reload command
 	reload_cmd_test = "echo reload-cmd not defined"
 }
+
+func TestThatSyncCommandDoesntRunInParallel(t *testing.T) {
+	tmpDir := setup(t)
+	defer os.RemoveAll(tmpDir)
+
+	// in order to test that the sync command executed we create a file to later verify that it exists on the disk
+	sync_cmd_test := "sleep 3"
+	syncCmd = &sync_cmd_test
+
+	lastsync := status.LastSync
+
+	time.Sleep(1500 * time.Millisecond)
+
+	if status.LastSyncDuration != -1 {
+		t.Fatal("After 1.5s the sync command should not have finished.LastSyncDuration should have been -1")
+	}
+
+	if status.LastSync.Equal(lastsync) {
+		t.Fatal("Sync shouldn't have executed in the meanwhile.")
+	}
+
+	time.Sleep(1700 * time.Millisecond)
+
+	if time.Since(status.LastSync) < 3 {
+		t.Fatal("time since last sync is wrong: " + time.Since(status.LastSync).String())
+	}
+
+	sync_cmd_test = "echo sync-cmd not defined"
+}

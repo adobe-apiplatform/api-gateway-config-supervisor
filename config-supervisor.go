@@ -62,7 +62,16 @@ func ParseFlags() {
 }
 
 func executeSyncCmd() {
-	go sync.Execute(*syncCmd)
+	//what if the previous command didn't finish ?
+	if status.LastSyncDuration < 0 {
+		log.Printf("Skipping sync as the previous command is still running ...")
+		return
+	}
+	go func(start time.Time) {
+		sync.Execute(*syncCmd)
+		status.LastSyncDuration = time.Since(start)
+	}(time.Now())
+	status.LastSyncDuration = -1
 	status.LastSync = time.Now()
 }
 
