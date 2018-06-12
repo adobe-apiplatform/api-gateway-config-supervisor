@@ -181,6 +181,19 @@ func TestThatReloadCommandExecutesWhenNewFolderIsAdded(t *testing.T) {
 		t.Fatal("Expected to find the file created by the reload command " + tmpDir + "/reload_cmd.txt")
 	}
 
+	//delete the tmp file and the TempDir
+	reload_cmd_test = "touch " + tmpDir + "/reload_cmd_after_rm.txt"
+	reloadCmd = &reload_cmd_test
+	// os.Remove(tmpDir + "/reload_cmd.txt")
+	os.RemoveAll(dir)
+
+	time.Sleep(3000 * time.Millisecond)
+
+	// check that the reload_cmd_after_rm.txt file was created when the reload command executed
+	if _, err := os.Stat(tmpDir + "/reload_cmd_after_rm.txt"); err != nil {
+		t.Fatal("Expected to find the file created by the reload command " + tmpDir + "/reload_cmd_after_rm.txt")
+	}
+
 	//reset the reload command
 	reload_cmd_test = "echo reload-cmd not defined"
 }

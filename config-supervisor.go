@@ -9,9 +9,10 @@ import (
 	"runtime/pprof"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
 	"github.com/adobe-apiplatform/api-gateway-config-supervisor/ws"
-	_ "net/http/pprof"
 
 	"github.com/carlescere/scheduler"
 
@@ -84,6 +85,7 @@ func watchForFSChanges() {
 	for {
 		select {
 		case file := <-c:
+			// log.Println(ansicolor.Blue("Changed:"), ansicolor.Underline(file))
 			if file == "" {
 				continue
 			}
