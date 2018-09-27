@@ -9,9 +9,10 @@ import (
 	"runtime/pprof"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
 	"github.com/adobe-apiplatform/api-gateway-config-supervisor/ws"
-	_ "net/http/pprof"
 
 	"github.com/carlescere/scheduler"
 
@@ -61,7 +62,16 @@ func ParseFlags() {
 }
 
 func executeSyncCmd() {
-	go sync.Execute(*syncCmd)
+	//what if the previous command didn't finish ?
+	if status.LastSyncDuration < 0 {
+		log.Printf("Skipping sync as the previous command is still running ...")
+		return
+	}
+	go func(start time.Time) {
+		sync.Execute(*syncCmd)
+		status.LastSyncDuration = time.Since(start)
+	}(time.Now())
+	status.LastSyncDuration = -1
 	status.LastSync = time.Now()
 }
 
@@ -84,6 +94,7 @@ func watchForFSChanges() {
 	for {
 		select {
 		case file := <-c:
+			// log.Println(ansicolor.Blue("Changed:"), ansicolor.Underline(file))
 			if file == "" {
 				continue
 			}

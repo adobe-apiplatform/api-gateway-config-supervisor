@@ -10,6 +10,7 @@ type Status struct {
 	LastSync             time.Time `json:"lastSync"`
 	LastFSChangeDetected time.Time `json:"lastChangeDetected"`
 	LastReload           time.Time `json:"lastReload"`
+	LastSyncDuration     time.Duration
 }
 
 var instance *Status
@@ -20,6 +21,7 @@ func GetStatusInstance() *Status {
 		instance = &Status{
 			LastReload:           time.Now(), // we assume it has happened already to avoid immediate reloads
 			LastFSChangeDetected: time.Now(), // we assume it has happened already to avoid immediate reloads
+			LastSyncDuration:     0,
 		}
 	})
 	return instance
