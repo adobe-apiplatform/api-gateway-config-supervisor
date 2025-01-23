@@ -95,6 +95,13 @@ func (watcher *RecursiveWatcher) Run(debug bool) {
 					watcher.Files <- event.Name
 				}
 
+				if event.Op&fsnotify.Remove == fsnotify.Remove {
+					if debug {
+						DebugMessage("Detected remove event %s", event.Name)
+					}
+					watcher.Files <- event.Name
+				}
+
 			case err := <-watcher.fsw.Errors:
 				log.Println("error", err)
 			}

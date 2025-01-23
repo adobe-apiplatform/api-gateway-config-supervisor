@@ -2,13 +2,19 @@ package main
 
 import (
 	"flag"
-	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
+	Sync "sync"
 	"testing"
 	"time"
+
+	"github.com/adobe-apiplatform/api-gateway-config-supervisor/sync"
+	"github.com/koyachi/go-term-ansicolor/ansicolor"
 )
+
+var once Sync.Once
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -29,6 +35,12 @@ func setup(t *testing.T) (tempdir string) {
 	// setup extra debug information
 	debugOn := true
 	debug = &debugOn
+
+	once.Do(func() {
+		log.Println(ansicolor.IntenseBlack("Starting the main() program"))
+		go main()
+	})
+
 	return tmpDir
 }
 
@@ -51,9 +63,6 @@ func createFile(t *testing.T, tmpDir string, file_content string) (f *os.File, e
 func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
 	tmpDir := setup(t)
 	defer os.RemoveAll(tmpDir)
-
-	// start the utility in background
-	go main()
 
 	status = sync.GetStatusInstance()
 	if time.Since(status.LastSync).Seconds() < 2 {
@@ -106,7 +115,6 @@ func TestThatReloadCommandExecutesOnFsChanges(t *testing.T) {
 
 	//reset the reload command
 	reload_cmd = "echo reload-cmd not defined"
-	reloadCmd = &reload_cmd
 }
 
 func TestThatSyncCommandExecutes(t *testing.T) {
@@ -118,17 +126,74 @@ func TestThatSyncCommandExecutes(t *testing.T) {
 	syncCmd = &sync_cmd_test
 
 	// wait for some time to init
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(1100 * time.Millisecond)
 
-	// main is already started by the previous test
-	// and we can't start it here again due to: https://github.com/golang/go/issues/4674
-	//go main()
-
-	// wait for some time to init
-	time.Sleep(500 * time.Millisecond)
-
-	// check that the sync_cmd.txt file exists
+	// check that the sync_cmd.txt file was created when the sync command executes
 	if _, err := os.Stat(tmpDir + "/sync_cmd.txt"); err != nil {
 		t.Fatal("Expected to find the file created by the sync command " + tmpDir + "/sync_cmd.txt")
 	}
+
+	sync_cmd_test = "echo sync-cmd not defined"
+}
+
+func TestThatReloadCommandExecutesWhenNewFolderIsAdded(t *testing.T) {
+	tmpDir := setup(t)
+	defer os.RemoveAll(tmpDir)
+
+	// in order to test that the reload command executed, we create a file and later verify that it exists on the disk
+	reload_cmd_test := "touch " + tmpDir + "/reload_cmd.txt"
+	reloadCmd = &reload_cmd_test
+
+	syncFolder = &tmpDir
+	go watchForFSChanges()
+
+	// wait for some time
+	time.Sleep(500 * time.Millisecond)
+
+	//modifyFS: create a new directory and file
+	dir, err := ioutil.TempDir(tmpDir, "new-folder-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f2, err := createFile(t, dir, "new-file-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(f2.Name()) // clean up
+
+	// wait for some time to track the changes
+	time.Sleep(1000 * time.Millisecond)
+
+	status = sync.GetStatusInstance()
+	// check that reload cmd has been executed
+	if time.Since(status.LastSync).Seconds() > 1 {
+		t.Fatal("sync should have executed earlier than 1.5 but was executed " + time.Since(status.LastSync).String())
+	}
+	if time.Since(status.LastReload).Seconds() > 1 {
+		t.Fatal("reload should have executed earlier than 1.5s but was executed " + time.Since(status.LastReload).String())
+	}
+	if time.Since(status.LastFSChangeDetected).Seconds() > 1 {
+		t.Fatal("FS changes should have been detected earlier than 1.5s but was detected " + time.Since(status.LastFSChangeDetected).String())
+	}
+
+	// check that the reload_cmd.txt file was created when the reload command executed
+	if _, err := os.Stat(tmpDir + "/reload_cmd.txt"); err != nil {
+		t.Fatal("Expected to find the file created by the reload command " + tmpDir + "/reload_cmd.txt")
+	}
+
+	//delete the tmp file and the TempDir
+	reload_cmd_test = "touch " + tmpDir + "/reload_cmd_after_rm.txt"
+	reloadCmd = &reload_cmd_test
+	// os.Remove(tmpDir + "/reload_cmd.txt")
+	os.RemoveAll(dir)
+
+	time.Sleep(3000 * time.Millisecond)
+
+	// check that the reload_cmd_after_rm.txt file was created when the reload command executed
+	if _, err := os.Stat(tmpDir + "/reload_cmd_after_rm.txt"); err != nil {
+		t.Fatal("Expected to find the file created by the reload command " + tmpDir + "/reload_cmd_after_rm.txt")
+	}
+
+	//reset the reload command
+	reload_cmd_test = "echo reload-cmd not defined"
 }

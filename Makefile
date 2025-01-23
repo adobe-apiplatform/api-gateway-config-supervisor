@@ -8,7 +8,7 @@ setup:
 
 install:
 	@go version
-	export GO15VENDOREXPERIMENT=1
+#	export GO15VENDOREXPERIMENT=1
 #	GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install -v ./...
 	GOPATH=$(GOPATH) GOBIN=$(GOBIN) $(GOPATH)/bin/godep go install -v ./...
 
