@@ -150,6 +150,8 @@ func TestThatReloadCommandExecutesWhenNewFolderIsAdded(t *testing.T) {
 	// wait for some time
 	time.Sleep(500 * time.Millisecond)
 
+	startTime := time.Now()
+
 	//modifyFS: create a new directory and file
 	dir, err := ioutil.TempDir(tmpDir, "new-folder-")
 	if err != nil {
@@ -165,20 +167,20 @@ func TestThatReloadCommandExecutesWhenNewFolderIsAdded(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 
 	status = sync.GetStatusInstance()
-	// check that reload cmd has been executed
-	if time.Since(status.LastSync).Seconds() > 1 {
-		t.Fatal("sync should have executed earlier than 1.5 but was executed " + time.Since(status.LastSync).String())
+
+	if status.LastSync.Before(startTime) {
+		t.Fatalf("sync has not been executed since FS changes triggered at %s. Last sync time: %s", startTime, status.LastSync)
 	}
-	if time.Since(status.LastReload).Seconds() > 1 {
-		t.Fatal("reload should have executed earlier than 1.5s but was executed " + time.Since(status.LastReload).String())
+	if status.LastReload.Before(startTime) {
+		t.Fatalf("reload has not been executed since FS changes triggered at %s. Last reload time: %s", startTime, status.LastReload)
 	}
-	if time.Since(status.LastFSChangeDetected).Seconds() > 1 {
-		t.Fatal("FS changes should have been detected earlier than 1.5s but was detected " + time.Since(status.LastFSChangeDetected).String())
+	if status.LastFSChangeDetected.Before(startTime) {
+		t.Fatalf("FS changes have not been detected since FS changes triggered at %s. Last FS change detected at %s", startTime, status.LastFSChangeDetected)
 	}
 
 	// check that the reload_cmd.txt file was created when the reload command executed
 	if _, err := os.Stat(tmpDir + "/reload_cmd.txt"); err != nil {
-		t.Fatal("Expected to find the file created by the reload command " + tmpDir + "/reload_cmd.txt")
+		t.Fatalf("Expected to find the file created by the reload command " + tmpDir + "/reload_cmd.txt")
 	}
 
 	//delete the tmp file and the TempDir
