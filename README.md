@@ -53,24 +53,15 @@ api-gateway-config-supervisor \
 Dependencies
 ============
 
-* https://github.com/tools/godep
+* Golang
 * https://gowalker.org/github.com/ncw/rclone
-* gopkg.in/fsnotify.v1
-* TBD
 
 Developer guide
 ===============
 
-Make sure you have go 1.5.1+ installed. On a Mac you can execute:
+Make sure you have go installed. On a Mac you can execute:
 ```
 brew install go
-```
-
-The go dependencies have been already added using `godeps` in the existing GitRepo in order to achieve repeatable builds and isolated envs.
-To build the project you can run:
-
-```
-make install
 ```
 
 To run the unit tests run:

@@ -3,15 +3,6 @@ GOBIN ?= `pwd`/bin
 GOOS ?= $(`uname -a | awk '{print tolower($1)}'`)
 .PHONY: setup install test format static docker docker-ssh
 
-setup:
-	go get github.com/tools/godep
-
-install:
-	@go version
-#	export GO15VENDOREXPERIMENT=1
-#	GOPATH=$(GOPATH) GOBIN=$(GOBIN) go install -v ./...
-	GOPATH=$(GOPATH) GOBIN=$(GOBIN) $(GOPATH)/bin/godep go install -v ./...
-
 test:
 	go test
 

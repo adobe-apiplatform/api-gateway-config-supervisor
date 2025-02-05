@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/koyachi/go-term-ansicolor/ansicolor"
-	"gopkg.in/fsnotify.v1"
 )
 
 type RecursiveWatcher struct {
@@ -37,6 +37,7 @@ func NewRecursiveWatcher(path string) (*RecursiveWatcher, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	rw := &RecursiveWatcher{fsw: watcher}
 
 	rw.Files = make(chan string, 10)
